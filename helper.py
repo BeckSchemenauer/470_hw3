@@ -31,6 +31,10 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, e
     best_val_acc = 0.0
     patience_counter = 0
 
+    # lists to track metrics
+    train_losses = []
+    val_accuracies = []
+
     for epoch in range(1, epochs + 1):
         model.train()
         running_loss = 0.0
@@ -49,9 +53,12 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, e
         avg_loss = running_loss / len(train_loader.dataset)
         val_acc = test_model(model, val_loader, device, return_acc=True)
 
+        train_losses.append(avg_loss)
+        val_accuracies.append(val_acc)
+
         print(f"Epoch {epoch} | Train Loss: {avg_loss:.4f} | Val Acc: {val_acc:.4f}")
 
-        # Early stopping logic
+        # early stopping
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             patience_counter = 0
@@ -60,6 +67,27 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, e
             if patience_counter >= patience:
                 print(f"Early stopping triggered after {epoch} epochs. Best Val Acc: {best_val_acc:.4f}")
                 break
+
+    # plot after training
+    plt.figure(figsize=(10, 5))
+
+    plt.subplot(1, 2, 1)
+    plt.plot(train_losses, label='Train Loss')
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Training Loss")
+    plt.grid(True)
+
+    plt.subplot(1, 2, 2)
+    plt.plot(val_accuracies, label='Val Accuracy', color='green')
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title("Validation Accuracy")
+    plt.grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
 
 
 def test_model(model, data_loader, device, return_acc=False):
