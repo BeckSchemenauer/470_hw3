@@ -13,19 +13,25 @@ class LSTMModel(nn.Module):
         self.lstm = nn.LSTM(input_size=3, hidden_size=250, num_layers=2, batch_first=True)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.4)
+
         self.fc1 = nn.Linear(250, 250)
         self.fc2 = nn.Linear(250, 50)
         self.fc3 = nn.Linear(50, 9)
 
     def forward(self, x):
         lstm_out, _ = self.lstm(x)
-        x = self.relu(lstm_out[:, -1, :])
+
+        # apply dropout immediately after LSTM output
+        x = self.dropout(lstm_out[:, -1, :])
         x = self.dropout(self.relu(self.fc1(x)))
         x = self.dropout(self.relu(self.fc2(x)))
+
         return self.fc3(x)
 
 
 def train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=10, patience=10):
+    print("pushed1")
+
     model.to(device)
 
     best_val_acc = 0.0
