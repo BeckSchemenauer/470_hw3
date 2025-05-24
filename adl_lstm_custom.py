@@ -29,7 +29,15 @@ val_dataset = TensorDataset(torch.stack([X[i] for i in X_test.indices]), y_test)
 val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
 
 model = LSTMModel(hidden_layers=[250, 250, 50], dropout_rate=0.4)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+
+# Choose optimizer
+use_sgd = False  # set True to use SGD
+
+if use_sgd:
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.0001, weight_decay=0.1)
+else:
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001, weight_decay=0.1)
+
 criterion = torch.nn.CrossEntropyLoss()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
