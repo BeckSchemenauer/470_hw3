@@ -31,8 +31,9 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, e
     best_val_acc = 0.0
     patience_counter = 0
 
-    # lists to track metrics
+    # track loss and accuracy
     train_losses = []
+    train_accuracies = []
     val_accuracies = []
 
     for epoch in range(1, epochs + 1):
@@ -50,15 +51,19 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, e
 
             running_loss += loss.item() * X_batch.size(0)
 
+        # compute average loss over the epoch
         avg_loss = running_loss / len(train_loader.dataset)
-        val_acc = test_model(model, val_loader, device, return_acc=True)
-
         train_losses.append(avg_loss)
+
+        # evaluate train and validation accuracy
+        train_acc = test_model(model, train_loader, device, return_acc=True)
+        val_acc = test_model(model, val_loader, device, return_acc=True)
+        train_accuracies.append(train_acc)
         val_accuracies.append(val_acc)
 
-        print(f"Epoch {epoch} | Train Loss: {avg_loss:.4f} | Val Acc: {val_acc:.4f}")
+        print(f"Epoch {epoch} | Train Loss: {avg_loss:.4f} | Train Acc: {train_acc:.4f} | Val Acc: {val_acc:.4f}")
 
-        # early stopping
+        # early stopping check
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             patience_counter = 0
@@ -68,26 +73,17 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, e
                 print(f"Early stopping triggered after {epoch} epochs. Best Val Acc: {best_val_acc:.4f}")
                 break
 
-    # plot after training
+    # plot accuracy comparison
     plt.figure(figsize=(10, 5))
-
-    plt.subplot(1, 2, 1)
-    plt.plot(train_losses, label='Train Loss')
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.title("Training Loss")
-    plt.grid(True)
-
-    plt.subplot(1, 2, 2)
-    plt.plot(val_accuracies, label='Val Accuracy', color='green')
+    plt.plot(train_accuracies, label="Train Accuracy")
+    plt.plot(val_accuracies, label="Validation Accuracy")
     plt.xlabel("Epoch")
     plt.ylabel("Accuracy")
-    plt.title("Validation Accuracy")
+    plt.title("Train vs. Validation Accuracy")
+    plt.legend()
     plt.grid(True)
-
     plt.tight_layout()
     plt.show()
-
 
 
 def test_model(model, data_loader, device, return_acc=False):
