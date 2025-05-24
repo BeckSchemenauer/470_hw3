@@ -93,16 +93,6 @@ def stratified_group_split(X, labels, subject_ids, n_splits=5, fold_idx=0):
     train_labels = labels[train_idx]
     val_labels = labels[val_idx]
 
-    def print_class_distribution(label_tensor, name):
-        unique, counts = np.unique(label_tensor.numpy(), return_counts=True)
-        total = len(label_tensor)
-        print(f"\n{name} class distribution:")
-        for u, c in zip(unique, counts):
-            print(f"  Class {u}: {c} samples ({(c / total * 100):.2f}%)")
-
-    print_class_distribution(train_labels, "Train")
-    print_class_distribution(val_labels, "Validation")
-
     return train_dataset, val_dataset, train_labels, val_labels
 
 
@@ -130,4 +120,17 @@ def oversample_minority_classes(X, y):
     final_indices = torch.cat(all_indices)
     shuffled_indices = final_indices[torch.randperm(len(final_indices))]
 
-    return X[shuffled_indices], y[shuffled_indices]
+    X_balanced = X[shuffled_indices]
+    y_balanced = y[shuffled_indices]
+
+    def print_class_distribution(label_tensor, name):
+        unique, counts = np.unique(label_tensor.numpy(), return_counts=True)
+        total = len(label_tensor)
+        print(f"\n{name} class distribution:")
+        for u, c in zip(unique, counts):
+            print(f"  Class {u}: {c} samples ({(c / total * 100):.2f}%)")
+
+    print_class_distribution(X_balanced, "Train")
+    print_class_distribution(y_balanced, "Validation")
+
+    return X_balanced, y_balanced
