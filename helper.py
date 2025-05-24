@@ -34,7 +34,7 @@ class LSTMModel(nn.Module):
 
 
 def train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=10, patience=10):
-    print("pushed1")
+    print("pushed 1:44ipup")
 
     model.to(device)
 
