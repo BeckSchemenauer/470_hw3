@@ -1,4 +1,4 @@
-from preprocessing import load_blockwise_sequences, load_labels_and_subjects, stratified_group_split
+from preprocessing import load_blockwise_sequences, load_labels_and_subjects, stratified_group_split, oversample_minority_classes
 from helper import LSTMModel, train_model, test_model
 from torch.utils.data import TensorDataset, DataLoader
 import torch
@@ -14,12 +14,18 @@ print("Min label:", labels.min().item(), "Max label:", labels.max().item())
 
 X_train, X_test, y_train, y_test = stratified_group_split(X, labels, subject_ids)
 
-# Convert to TensorDatasets
-train_dataset = TensorDataset(torch.stack([X[i] for i in X_train.indices]), y_train)
-val_dataset = TensorDataset(torch.stack([X[i] for i in X_test.indices]), y_test)
+# convert X_train indices into tensors
+X_train_tensor = torch.stack([X[i] for i in X_train.indices])
+y_train_tensor = y_train
 
-# DataLoaders
+X_balanced, y_balanced = oversample_minority_classes(X_train_tensor, y_train_tensor)
+
+# create balanced train loader
+train_dataset = TensorDataset(X_balanced, y_balanced)
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+
+# validation loader stays the same (no balancing)
+val_dataset = TensorDataset(torch.stack([X[i] for i in X_test.indices]), y_test)
 val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
 
 model = LSTMModel()
@@ -28,5 +34,5 @@ criterion = torch.nn.CrossEntropyLoss()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=100, patience=10)
+train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=200, patience=20)
 test_model(model, val_loader, device)
