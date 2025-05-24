@@ -1,5 +1,5 @@
 from preprocessing import load_blockwise_sequences, load_labels_and_subjects, stratified_group_split, \
-    oversample_minority_classes
+    oversample_minority_classes, print_class_distribution
 from helper import LSTMModel, train_model, test_model
 from torch.utils.data import TensorDataset, DataLoader
 import torch
@@ -27,6 +27,9 @@ def run_experiment(
     y_train_tensor = y_train
     X_balanced, y_balanced = oversample_minority_classes(X_train_tensor, y_train_tensor)
 
+    print_class_distribution(y_balanced, "Train")
+    print_class_distribution(y_test, "Test")
+
     # train and validation datasets/loaders
     train_dataset = TensorDataset(X_balanced, y_balanced)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -36,7 +39,7 @@ def run_experiment(
 
     # model and training setup
     model = LSTMModel(hidden_layers=hidden_layers, dropout_rate=dropout_rate)
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.1)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=.1)
     criterion = torch.nn.CrossEntropyLoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -51,9 +54,9 @@ def run_experiment(
 def run_hyperparameter_search():
     # define hyperparameter options
     batch_sizes = [64]
-    learning_rates = [0.001, 0.0005]
-    hidden_layer_options = [[250, 250, 50], [128, 64]]
-    dropout_rates = [0.3, 0.4]
+    learning_rates = [0.0001]
+    hidden_layer_options = [[250, 250, 50],]
+    dropout_rates = [0.5]
     epochs = 100
     patience = 10
 
@@ -72,3 +75,6 @@ def run_hyperparameter_search():
             epochs=epochs,
             patience=patience
         )
+
+
+run_hyperparameter_search()

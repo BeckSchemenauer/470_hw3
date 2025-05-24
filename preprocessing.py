@@ -123,14 +123,12 @@ def oversample_minority_classes(X, y):
     X_balanced = X[shuffled_indices]
     y_balanced = y[shuffled_indices]
 
-    def print_class_distribution(label_tensor, name):
-        unique, counts = np.unique(label_tensor.numpy(), return_counts=True)
-        total = len(label_tensor)
-        print(f"\n{name} class distribution:")
-        for u, c in zip(unique, counts):
-            print(f"  Class {u}: {c} samples ({(c / total * 100):.2f}%)")
-
-    print_class_distribution(X_balanced, "Train")
-    print_class_distribution(y_balanced, "Validation")
-
     return X_balanced, y_balanced
+
+
+def print_class_distribution(label_tensor, name):
+    unique, counts = np.unique(label_tensor.numpy(), return_counts=True)
+    total = len(label_tensor)
+    print(f"\n{name} class distribution:")
+    for u, c in zip(unique, counts):
+        print(f"  Class {u}: {c} samples ({(c / total * 100):.2f}%)")
