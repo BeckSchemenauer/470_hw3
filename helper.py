@@ -8,25 +8,29 @@ from sklearn.metrics import confusion_matrix
 
 
 class LSTMModel(nn.Module):
-    def __init__(self):
+    def __init__(self, hidden_layers=[250, 250, 50], dropout_rate=0.4):
         super().__init__()
-        self.lstm = nn.LSTM(input_size=3, hidden_size=250, num_layers=2, batch_first=True)
+        self.lstm = nn.LSTM(input_size=3, hidden_size=hidden_layers[0], num_layers=2, batch_first=True)
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(p=0.4)
+        self.dropout = nn.Dropout(p=dropout_rate)
 
-        self.fc1 = nn.Linear(250, 250)
-        self.fc2 = nn.Linear(250, 50)
-        self.fc3 = nn.Linear(50, 9)
+        # dynamically build feedforward layers
+        layers = []
+        for in_dim, out_dim in zip(hidden_layers, hidden_layers[1:]):
+            layers.append(nn.Linear(in_dim, out_dim))
+            layers.append(self.relu)
+            layers.append(self.dropout)
+
+        # final classifier layer
+        layers.append(nn.Linear(hidden_layers[-1], 9))  # 9 classes
+
+        self.ffn = nn.Sequential(*layers)
 
     def forward(self, x):
         lstm_out, _ = self.lstm(x)
+        x = self.dropout(lstm_out[:, -1, :])  # use last LSTM output with dropout
+        return self.ffn(x)
 
-        # apply dropout immediately after LSTM output
-        x = self.dropout(lstm_out[:, -1, :])
-        x = self.dropout(self.relu(self.fc1(x)))
-        x = self.dropout(self.relu(self.fc2(x)))
-
-        return self.fc3(x)
 
 
 def train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=10, patience=10):
