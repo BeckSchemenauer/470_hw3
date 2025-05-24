@@ -12,7 +12,7 @@ class LSTMModel(nn.Module):
         super().__init__()
         self.lstm = nn.LSTM(input_size=3, hidden_size=250, num_layers=2, batch_first=True)
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(p=0.2)
+        self.dropout = nn.Dropout(p=0.4)
         self.fc1 = nn.Linear(250, 250)
         self.fc2 = nn.Linear(250, 50)
         self.fc3 = nn.Linear(50, 9)
