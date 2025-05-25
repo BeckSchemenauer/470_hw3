@@ -35,9 +35,9 @@ class LSTMModel(nn.Module):
 class CNN1DModel(nn.Module):
     def __init__(self, hidden_layers=[500], dropout_rate=0.5, input_length=151, input_channels=3, out_features=9):
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=input_channels, out_channels=64, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv1d(in_channels=input_channels, out_channels=128, kernel_size=3, padding=1)
         self.pool = nn.MaxPool1d(kernel_size=2)
-        self.conv2 = nn.Conv1d(in_channels=64, out_channels=64, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv1d(in_channels=128, out_channels=64, kernel_size=3, padding=1)
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=dropout_rate)
