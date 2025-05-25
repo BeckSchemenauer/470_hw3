@@ -35,22 +35,37 @@ class LSTMModel(nn.Module):
 class CNN1DModel(nn.Module):
     def __init__(self, hidden_layers=[500], dropout_rate=0.5, input_length=151, input_channels=3, out_features=9):
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=input_channels, out_channels=128, kernel_size=3, padding=1)
-        self.pool = nn.MaxPool1d(kernel_size=2)
-        self.conv2 = nn.Conv1d(in_channels=128, out_channels=64, kernel_size=3, padding=1)
-
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=dropout_rate)
 
-        # infer flatten size using a dummy input
-        with torch.no_grad():
-            dummy_input = torch.zeros(1, input_channels, input_length)  # (B, C, L)
-            x = self.relu(self.conv1(dummy_input))
-            x = self.pool(x)
-            x = self.relu(self.conv2(x))
-            flatten_dim = x.view(1, -1).shape[1]  # total features after flattening
+        # convolutional layers with deeper structure
+        self.conv_layers = nn.Sequential(
+            nn.Conv1d(input_channels, 64, kernel_size=3, padding=1),
+            self.relu,
+            nn.Conv1d(64, 64, kernel_size=3, padding=1),
+            self.relu,
+            nn.MaxPool1d(kernel_size=2),
 
-        # dynamically build feedforward layers
+            nn.Conv1d(64, 128, kernel_size=3, padding=1),
+            self.relu,
+            nn.Conv1d(128, 128, kernel_size=3, padding=1),
+            self.relu,
+            nn.MaxPool1d(kernel_size=2),
+
+            nn.Conv1d(128, 256, kernel_size=3, padding=1),
+            self.relu,
+            nn.Conv1d(256, 256, kernel_size=3, padding=1),
+            self.relu,
+            nn.MaxPool1d(kernel_size=2),
+        )
+
+        # calculate flattened dimension
+        with torch.no_grad():
+            dummy_input = torch.zeros(1, input_channels, input_length)
+            x = self.conv_layers(dummy_input)
+            flatten_dim = x.view(1, -1).shape[1]
+
+        # fully connected layers
         layers = []
         prev_dim = flatten_dim
         for dim in hidden_layers:
@@ -59,18 +74,15 @@ class CNN1DModel(nn.Module):
             layers.append(self.dropout)
             prev_dim = dim
 
-        layers.append(nn.Linear(prev_dim, out_features))  # final output layer for 8 or 9 classes
-
+        layers.append(nn.Linear(prev_dim, out_features))
         self.ffn = nn.Sequential(*layers)
 
     def forward(self, x):
         x = x.permute(0, 2, 1)  # (B, 3, 151)
-        x = self.relu(self.conv1(x))
-        x = self.pool(x)
-        x = self.relu(self.conv2(x))
-        x = self.dropout(x)
+        x = self.conv_layers(x)
         x = x.view(x.size(0), -1)
         return self.ffn(x)
+
 
 
 class TransformerModel(nn.Module):

@@ -133,3 +133,20 @@ def print_class_distribution(label_tensor, name):
     print(f"\n{name} class distribution:")
     for u, c in zip(unique, counts):
         print(f"  Class {u}: {c} samples ({(c / total * 100):.2f}%)")
+
+
+def normalize_axes_separately(X_train, X_test):
+
+    X_train_norm = X_train.clone()
+    X_test_norm = X_test.clone()
+
+    for axis in range(3):
+        # (N, 151, 3) → (N*151,) for axis
+        axis_values = X_train[:, :, axis].reshape(-1)
+        mean = axis_values.mean()
+        std = axis_values.std()
+
+        X_train_norm[:, :, axis] = (X_train[:, :, axis] - mean) / (std + 1e-8)
+        X_test_norm[:, :, axis] = (X_test[:, :, axis] - mean) / (std + 1e-8)
+
+    return X_train_norm, X_test_norm

@@ -1,5 +1,5 @@
 from preprocessing import load_blockwise_sequences, load_labels_and_subjects, stratified_group_split, \
-    oversample_minority_classes, print_class_distribution
+    oversample_minority_classes, print_class_distribution, normalize_axes_separately
 from helper import LSTMModel, CNN1DModel, train_model, test_model
 from torch.utils.data import TensorDataset, DataLoader
 import torch
@@ -36,6 +36,12 @@ def run_experiment(
     X_train_tensor = torch.stack([X[i] for i in X_train.indices])
     y_train_tensor = y_train
     X_balanced, y_balanced = oversample_minority_classes(X_train_tensor, y_train_tensor)
+
+    # extract raw test tensor
+    X_test_tensor = torch.stack([X[i] for i in X_test.indices])
+
+    # normalize each axis using train stats
+    X_balanced, X_test_tensor = normalize_axes_separately(X_balanced, X_test_tensor)
 
     print_class_distribution(y_balanced, "Train")
     print_class_distribution(y_test, "Test")
@@ -83,11 +89,11 @@ def run_experiment(
 def run_hyperparameter_search():
     # define hyperparameter options
     batch_sizes = [64, 128]
-    learning_rates = [.001, .0005, 0.0001]
-    hidden_layer_options = [[500], [500, 250], [250, 50], [64, 32, 32],]
-    dropout_rates = [0.3, 0.4, 0.5]
+    learning_rates = [.003, .001, .0005, ]
+    hidden_layer_options = [[1024, 512], [512, 256], [256, 128]]
+    dropout_rates = [0.1, 0.2, 0.3, 0.4]
     model_types = ['cnn']
-    epochs = 100
+    epochs = 200
     patience = 10
 
     # create all combinations including model_type
