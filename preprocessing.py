@@ -46,7 +46,7 @@ def plot_first_three_rows(csv_file, title):
     plt.show()
 
 
-# create_file1("adl_data.csv", "adl_data_split_blocks.csv")
+# create_file1("fall_data.csv", "fall_data_split_blocks.csv")
 # create_file2("adl_data.csv", "adl_data_split_stride.csv")
 #
 # plot_first_three_rows("adl_data_split_blocks.csv", "Block-wise (151x3 chunks)")
@@ -74,6 +74,7 @@ def load_labels_and_subjects(label_csv):
     df = pd.read_csv(label_csv, header=0)
 
     # convert labels to zero-indexed classes: 1–9 --> 0–8
+    # or for fall dataset: 1–8 --> 0–7
     labels = df.iloc[:, 0].astype(int) - 1
     subjects = df.iloc[:, 1].values
 
