@@ -155,8 +155,8 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, e
         train_losses.append(avg_loss)
 
         # evaluate train and validation accuracy
-        train_acc = test_model(model, train_loader, device, return_acc=True)
-        val_acc = test_model(model, val_loader, device, return_acc=True)
+        train_acc = test_model(model, train_loader, device)
+        val_acc = test_model(model, val_loader, device)
         train_accuracies.append(train_acc)
         val_accuracies.append(val_acc)
 
@@ -185,7 +185,7 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, e
     plt.show()
 
 
-def test_model(model, data_loader, device, return_acc=False):
+def test_model(model, data_loader, device, print_output=False):
     model.eval()
     all_preds = []
     all_labels = []
@@ -200,19 +200,20 @@ def test_model(model, data_loader, device, return_acc=False):
 
     acc = (np.array(all_preds) == np.array(all_labels)).mean()
 
-    # Classification report
-    print("Classification Report:\n", classification_report(all_labels, all_preds))
+    if print_output:
+        # Classification report
+        print("Classification Report:\n", classification_report(all_labels, all_preds))
 
-    # Confusion matrix
-    cm = confusion_matrix(all_labels, all_preds)
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False,
-                xticklabels=[f"Pred {i}" for i in range(cm.shape[0])],
-                yticklabels=[f"True {i}" for i in range(cm.shape[0])])
-    plt.xlabel("Predicted")
-    plt.ylabel("True")
-    plt.title("Confusion Matrix")
-    plt.tight_layout()
-    plt.show()
+        # Confusion matrix
+        cm = confusion_matrix(all_labels, all_preds)
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False,
+                    xticklabels=[f"Pred {i}" for i in range(cm.shape[0])],
+                    yticklabels=[f"True {i}" for i in range(cm.shape[0])])
+        plt.xlabel("Predicted")
+        plt.ylabel("True")
+        plt.title("Confusion Matrix")
+        plt.tight_layout()
+        plt.show()
 
     return acc
