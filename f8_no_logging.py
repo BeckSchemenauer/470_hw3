@@ -1,6 +1,6 @@
 from preprocessing import load_blockwise_sequences, load_labels_and_subjects, stratified_group_split, \
-    oversample_minority_classes, print_class_distribution
-from helper import LSTMModel, CNN1DModel, TransformerModel,train_model, test_model
+    oversample_minority_classes, print_class_distribution, smote_expand_dataset, normalize_axes_separately
+from helper import LSTMModel, CNN1DModel, TransformerModel, train_model, test_model
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 from itertools import product
@@ -28,6 +28,22 @@ def run_experiment(
     y_train_tensor = y_train
     X_balanced, y_balanced = oversample_minority_classes(X_train_tensor, y_train_tensor)
 
+    # sanity check: shuffle labels to test for data leakage or broken signal
+    if model_type.endswith("_shuffled"):
+        model_type = model_type.split('_')[0]
+        print("Shuffling training labels for sanity check")
+        idx = torch.randperm(len(y_balanced))
+        y_balanced = y_balanced[idx]
+
+    # extract raw test tensor
+    # X_test_tensor = torch.stack([X[i] for i in X_test.indices])
+
+    # expand dataset with SMOTE to ~5000 samples per class
+    # X_balanced, y_balanced = smote_expand_dataset(X_balanced, y_balanced, target_per_class=5000)
+
+    # normalize each axis using train stats
+    # X_balanced, X_test_tensor = normalize_axes_separately(X_balanced, X_test_tensor)
+
     print_class_distribution(y_balanced, "Train")
     print_class_distribution(y_test, "Test")
 
@@ -48,7 +64,7 @@ def run_experiment(
     else:
         raise ValueError(f"Unsupported model_type: {model_type}")
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=.001)
     criterion = torch.nn.CrossEntropyLoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -63,13 +79,13 @@ def run_experiment(
 
 def run_hyperparameter_search():
     # define hyperparameter options
-    batch_sizes = [64, 128]
-    learning_rates = [.003, .001, .0005, ]
-    hidden_layer_options = [[512, 256], [256, 128], [512, 256, 256]]
-    dropout_rates = [0.1, 0.2, 0.3, 0.4]
-    model_types = ['cnn']
+    batch_sizes = [32, 64]
+    learning_rates = [.001, .0005, .00025, .0002, ]
+    hidden_layer_options = [[64]]
+    dropout_rates = [0.4, 0.5]
+    model_types = ['lstm']
     epochs = 200
-    patience = 10
+    patience = 15
 
     # create all combinations including model_type
     combinations = list(product(batch_sizes, learning_rates, hidden_layer_options, dropout_rates, model_types))
