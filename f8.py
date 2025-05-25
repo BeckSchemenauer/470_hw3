@@ -82,10 +82,10 @@ def run_experiment(
 
 def run_hyperparameter_search():
     # define hyperparameter options
-    batch_sizes = [64]
-    learning_rates = [0.0001]
-    hidden_layer_options = [[500], [500, 250], [250, 250, 50]]
-    dropout_rates = [0.5]
+    batch_sizes = [64, 128]
+    learning_rates = [.01, .001, .0005, 0.0001]
+    hidden_layer_options = [[500], [500, 250], [250, 50], [250, 250, 50], [64, 32, 32], [64, 64], [128, 64, 64, 32]]
+    dropout_rates = [0.3, 0.4, 0.5]
     model_types = ['lstm', 'cnn']
     epochs = 100
     patience = 10
