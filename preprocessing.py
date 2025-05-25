@@ -161,7 +161,7 @@ def smote_expand_dataset(X_tensor, y_tensor, target_per_class=5000):
     class_counts = Counter(y_np)
     smote_target = {cls: target_per_class for cls in class_counts}
 
-    sm = SMOTE(sampling_strategy=smote_target, random_state=42, n_jobs=-1)
+    sm = SMOTE(sampling_strategy=smote_target, random_state=42)
     X_resampled, y_resampled = sm.fit_resample(X_flat, y_np)
 
     # Reshape back to (N', 151, 3)
