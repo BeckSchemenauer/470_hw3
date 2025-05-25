@@ -65,9 +65,21 @@ def run_hyperparameter_search():
     # define hyperparameter options
     batch_sizes = [64, 128]
     learning_rates = [.001, .0005, 0.0001]
-    hidden_layer_options = [[500], [500, 250], [250, 50], [64, 32, 32], ]
+    hidden_layer_options = [
+        [512],
+        [512, 256],
+        [1024, 512, 256],
+        [1024, 512, 256, 128],
+        [256, 128, 64],
+        [128, 128, 128],
+        [768, 384, 192],
+        [256, 256, 256, 128, 64],
+        [1024, 768, 512, 256],
+        [2048, 1024, 512]
+    ]
+
     dropout_rates = [0.3, 0.4, 0.5]
-    model_types = ['cnn']
+    model_types = ['transformer']
     epochs = 100
     patience = 10
 
