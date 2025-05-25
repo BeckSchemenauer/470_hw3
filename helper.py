@@ -73,6 +73,41 @@ class CNN1DModel(nn.Module):
         return self.ffn(x)
 
 
+class TransformerModel(nn.Module):
+    def __init__(self, hidden_layers=[250, 250, 50], dropout_rate=0.4, seq_len=151, input_dim=3, out_features=9):
+        super().__init__()
+        self.d_model = hidden_layers[0]
+        self.input_proj = nn.Linear(input_dim, self.d_model)
+
+        self.pos_embed = nn.Parameter(torch.randn(1, seq_len, self.d_model))  # learnable positional encoding
+
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=self.d_model,
+            nhead=4,
+            dim_feedforward=4 * self.d_model,
+            dropout=dropout_rate,
+            batch_first=True
+        )
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=2)
+
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(dropout_rate)
+
+        # dynamically build feedforward classifier
+        layers = []
+        for in_dim, out_dim in zip(hidden_layers, hidden_layers[1:]):
+            layers.append(nn.Linear(in_dim, out_dim))
+            layers.append(self.relu)
+            layers.append(self.dropout)
+
+        layers.append(nn.Linear(hidden_layers[-1], out_features))
+        self.ffn = nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.input_proj(x) + self.pos_embed[:, :x.size(1)]
+        x = self.transformer(x)
+        x = x.mean(dim=1)  # global average pooling
+        return self.ffn(x)
 
 
 def train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=10, patience=10):
