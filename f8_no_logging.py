@@ -1,6 +1,6 @@
 from preprocessing import load_blockwise_sequences, load_labels_and_subjects, stratified_group_split, \
     oversample_minority_classes, print_class_distribution
-from helper import LSTMModel, CNN1DModel, train_model, test_model
+from helper import LSTMModel, CNN1DModel, TransformerModel,train_model, test_model
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 from itertools import product
@@ -43,6 +43,8 @@ def run_experiment(
         model = LSTMModel(hidden_layers=hidden_layers, dropout_rate=dropout_rate)
     elif model_type == 'cnn':
         model = CNN1DModel(hidden_layers=hidden_layers, dropout_rate=dropout_rate)
+    elif model_type == 'transformer':
+        model = TransformerModel(hidden_layers=hidden_layers, dropout_rate=dropout_rate)
     else:
         raise ValueError(f"Unsupported model_type: {model_type}")
 
