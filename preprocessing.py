@@ -5,6 +5,7 @@ import torch
 from sklearn.model_selection import StratifiedGroupKFold
 from torch.utils.data import Subset
 from collections import Counter
+from imblearn.over_sampling import SMOTE
 
 
 def create_file1(input_csv, output_csv):
@@ -150,3 +151,21 @@ def normalize_axes_separately(X_train, X_test):
         X_test_norm[:, :, axis] = (X_test[:, :, axis] - mean) / (std + 1e-8)
 
     return X_train_norm, X_test_norm
+
+def smote_expand_dataset(X_tensor, y_tensor, target_per_class=5000):
+
+    X_flat = X_tensor.numpy().reshape(X_tensor.size(0), -1)  # (N, 453)
+    y_np = y_tensor.numpy()
+
+    # Define how many samples each class should have
+    class_counts = Counter(y_np)
+    smote_target = {cls: target_per_class for cls in class_counts}
+
+    sm = SMOTE(sampling_strategy=smote_target, random_state=42, n_jobs=-1)
+    X_resampled, y_resampled = sm.fit_resample(X_flat, y_np)
+
+    # Reshape back to (N', 151, 3)
+    X_res_tensor = torch.tensor(X_resampled.reshape(-1, 151, 3), dtype=torch.float32)
+    y_res_tensor = torch.tensor(y_resampled, dtype=torch.long)
+
+    return X_res_tensor, y_res_tensor
