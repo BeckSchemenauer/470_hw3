@@ -48,7 +48,7 @@ def run_experiment(
     else:
         raise ValueError(f"Unsupported model_type: {model_type}")
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.1)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     criterion = torch.nn.CrossEntropyLoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -64,23 +64,11 @@ def run_experiment(
 def run_hyperparameter_search():
     # define hyperparameter options
     batch_sizes = [64, 128]
-    learning_rates = [.001, .0005, 0.0001]
-    hidden_layer_options = [
-        [512],
-        [512, 256],
-        [1024, 512, 256],
-        [1024, 512, 256, 128],
-        [256, 128, 64],
-        [128, 128, 128],
-        [768, 384, 192],
-        [256, 256, 256, 128, 64],
-        [1024, 768, 512, 256],
-        [2048, 1024, 512]
-    ]
-
-    dropout_rates = [0.3, 0.4, 0.5]
-    model_types = ['transformer']
-    epochs = 100
+    learning_rates = [.003, .001, .0005, ]
+    hidden_layer_options = [[512, 256], [256, 128], [512, 256, 256]]
+    dropout_rates = [0.1, 0.2, 0.3, 0.4]
+    model_types = ['cnn']
+    epochs = 200
     patience = 10
 
     # create all combinations including model_type
