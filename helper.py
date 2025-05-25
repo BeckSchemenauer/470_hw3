@@ -8,7 +8,7 @@ from sklearn.metrics import confusion_matrix
 
 
 class LSTMModel(nn.Module):
-    def __init__(self, hidden_layers=[250, 250, 50], dropout_rate=0.4):
+    def __init__(self, hidden_layers=[250, 250, 50], dropout_rate=0.4, out_features=9):
         super().__init__()
         self.lstm = nn.LSTM(input_size=3, hidden_size=hidden_layers[0], num_layers=2, batch_first=True)
         self.relu = nn.ReLU()
@@ -22,7 +22,7 @@ class LSTMModel(nn.Module):
             layers.append(self.dropout)
 
         # final classifier layer
-        layers.append(nn.Linear(hidden_layers[-1], 9))  # 9 classes
+        layers.append(nn.Linear(hidden_layers[-1], out_features))  # 9 classes
 
         self.ffn = nn.Sequential(*layers)
 
@@ -33,7 +33,7 @@ class LSTMModel(nn.Module):
 
 
 class CNN1DModel(nn.Module):
-    def __init__(self, dropout_rate=0.5, input_length=151, input_channels=3):
+    def __init__(self, hidden_layers=[500], dropout_rate=0.5, input_length=151, input_channels=3, out_features=9):
         super().__init__()
         self.conv1 = nn.Conv1d(in_channels=input_channels, out_channels=64, kernel_size=3, padding=1)
         self.pool = nn.MaxPool1d(kernel_size=2)
@@ -50,8 +50,18 @@ class CNN1DModel(nn.Module):
             x = self.relu(self.conv2(x))
             flatten_dim = x.view(1, -1).shape[1]  # total features after flattening
 
-        self.fc1 = nn.Linear(flatten_dim, 500)
-        self.fc2 = nn.Linear(500, 9)
+        # dynamically build feedforward layers
+        layers = []
+        prev_dim = flatten_dim
+        for dim in hidden_layers:
+            layers.append(nn.Linear(prev_dim, dim))
+            layers.append(self.relu)
+            layers.append(self.dropout)
+            prev_dim = dim
+
+        layers.append(nn.Linear(prev_dim, out_features))  # final output layer for 8 or 9 classes
+
+        self.ffn = nn.Sequential(*layers)
 
     def forward(self, x):
         x = x.permute(0, 2, 1)  # (B, 3, 151)
@@ -60,8 +70,8 @@ class CNN1DModel(nn.Module):
         x = self.relu(self.conv2(x))
         x = self.dropout(x)
         x = x.view(x.size(0), -1)
-        x = self.dropout(self.relu(self.fc1(x)))
-        return self.fc2(x)
+        return self.ffn(x)
+
 
 
 
