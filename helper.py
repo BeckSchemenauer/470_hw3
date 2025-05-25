@@ -198,21 +198,21 @@ def test_model(model, data_loader, device, return_acc=False):
             all_preds.extend(preds.numpy())
             all_labels.extend(y_batch.numpy())
 
-    if return_acc:
-        acc = (np.array(all_preds) == np.array(all_labels)).mean()
-        return acc
-    else:
-        # Classification report
-        print("Classification Report:\n", classification_report(all_labels, all_preds))
+    acc = (np.array(all_preds) == np.array(all_labels)).mean()
 
-        # Confusion matrix
-        cm = confusion_matrix(all_labels, all_preds)
-        plt.figure(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False,
-                    xticklabels=[f"Pred {i}" for i in range(cm.shape[0])],
-                    yticklabels=[f"True {i}" for i in range(cm.shape[0])])
-        plt.xlabel("Predicted")
-        plt.ylabel("True")
-        plt.title("Confusion Matrix")
-        plt.tight_layout()
-        plt.show()
+    # Classification report
+    print("Classification Report:\n", classification_report(all_labels, all_preds))
+
+    # Confusion matrix
+    cm = confusion_matrix(all_labels, all_preds)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False,
+                xticklabels=[f"Pred {i}" for i in range(cm.shape[0])],
+                yticklabels=[f"True {i}" for i in range(cm.shape[0])])
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
+    plt.title("Confusion Matrix")
+    plt.tight_layout()
+    plt.show()
+
+    return acc
