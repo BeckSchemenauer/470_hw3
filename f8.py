@@ -4,6 +4,10 @@ from helper import LSTMModel, CNN1DModel, train_model, test_model
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 from itertools import product
+import os
+import sys
+from datetime import datetime
+from io import StringIO
 
 
 def run_experiment(
@@ -15,6 +19,11 @@ def run_experiment(
         patience=20,
         model_type='lstm',
 ):
+    # setup logging
+    os.makedirs("f8_models", exist_ok=True)
+    buffer = StringIO()
+    sys.stdout = buffer  # redirect prints
+
     # load and split data
     X = load_blockwise_sequences("fall_data_split_blocks.csv")
     labels, subject_ids = load_labels_and_subjects("fall_labels.csv")
@@ -46,34 +55,47 @@ def run_experiment(
     else:
         raise ValueError(f"Unsupported model_type: {model_type}")
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=.1)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.1)
     criterion = torch.nn.CrossEntropyLoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     print(f"Using device: {device}")
-    print(f"Model architecture: {hidden_layers}, Dropout: {dropout_rate}, LR: {learning_rate}")
+    print(f"Model: {model_type.upper()}, Layers: {hidden_layers}, Dropout: {dropout_rate}, LR: {learning_rate}")
 
-    # train and evaluate
+    # train and get final validation accuracy
     train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=epochs, patience=patience)
-    test_model(model, val_loader, device)
+    final_acc = test_model(model, val_loader, device, return_acc=True)
+    print(f"Final Validation Accuracy: {final_acc:.4f}")
+
+    # generate filename
+    hp_desc = f"{model_type}_bs{batch_size}_lr{learning_rate}_drop{dropout_rate}_layers{'-'.join(map(str, hidden_layers))}"
+    filename = f"{final_acc:.4f}_{hp_desc}.txt"
+    path = os.path.join("f8_models", filename)
+
+    # write logs to file
+    with open(path, "w") as f:
+        f.write(buffer.getvalue())
+
+    sys.stdout = sys.__stdout__  # reset stdout
+    print(f"Saved output to {path}")
 
 
 def run_hyperparameter_search():
     # define hyperparameter options
     batch_sizes = [64]
     learning_rates = [0.0001]
-    hidden_layer_options = [[250, 250, 50],]
+    hidden_layer_options = [[500], [500, 250], [250, 250, 50]]
     dropout_rates = [0.5]
+    model_types = ['lstm', 'cnn']
     epochs = 100
     patience = 10
-    model_types=['lstm']
 
-    # create all combinations
-    combinations = list(product(batch_sizes, learning_rates, hidden_layer_options, dropout_rates))
+    # create all combinations including model_type
+    combinations = list(product(batch_sizes, learning_rates, hidden_layer_options, dropout_rates, model_types))
 
-    for i, (batch_size, lr, hidden_layers, dropout) in enumerate(combinations):
+    for i, (batch_size, lr, hidden_layers, dropout, model_type) in enumerate(combinations):
         print(f"\nRunning configuration {i+1}/{len(combinations)}")
-        print(f"Batch Size: {batch_size}, Learning Rate: {lr}, Layers: {hidden_layers}, Dropout: {dropout}")
+        print(f"Model: {model_type.upper()}, Batch Size: {batch_size}, LR: {lr}, Layers: {hidden_layers}, Dropout: {dropout}")
 
         run_experiment(
             batch_size=batch_size,
@@ -81,8 +103,10 @@ def run_hyperparameter_search():
             hidden_layers=hidden_layers,
             dropout_rate=dropout,
             epochs=epochs,
-            patience=patience
+            patience=patience,
+            model_type=model_type
         )
+
 
 
 run_hyperparameter_search()
