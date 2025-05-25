@@ -4,10 +4,6 @@ from helper import LSTMModel, CNN1DModel, train_model, test_model
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 from itertools import product
-import os
-import sys
-from datetime import datetime
-from io import StringIO
 
 
 def run_experiment(
@@ -19,11 +15,6 @@ def run_experiment(
         patience=20,
         model_type='lstm',
 ):
-    # setup logging
-    os.makedirs("f8_models", exist_ok=True)
-    buffer = StringIO()
-    sys.stdout = buffer  # redirect prints
-
     # load and split data
     X = load_blockwise_sequences("fall_data_split_blocks.csv")
     labels, subject_ids = load_labels_and_subjects("fall_labels.csv")
@@ -67,24 +58,12 @@ def run_experiment(
     final_acc = test_model(model, val_loader, device, return_acc=True)
     print(f"Final Validation Accuracy: {final_acc:.4f}")
 
-    # generate filename
-    hp_desc = f"{model_type}_bs{batch_size}_lr{learning_rate}_drop{dropout_rate}_layers{'-'.join(map(str, hidden_layers))}"
-    filename = f"{final_acc:.4f}_{hp_desc}.txt"
-    path = os.path.join("f8_models", filename)
-
-    # write logs to file
-    with open(path, "w") as f:
-        f.write(buffer.getvalue())
-
-    sys.stdout = sys.__stdout__  # reset stdout
-    print(f"Saved output to {path}")
-
 
 def run_hyperparameter_search():
     # define hyperparameter options
     batch_sizes = [64, 128]
     learning_rates = [.001, .0005, 0.0001]
-    hidden_layer_options = [[500], [500, 250], [250, 50], [64, 32, 32],]
+    hidden_layer_options = [[500], [500, 250], [250, 50], [64, 32, 32], ]
     dropout_rates = [0.3, 0.4, 0.5]
     model_types = ['cnn']
     epochs = 100
@@ -94,8 +73,9 @@ def run_hyperparameter_search():
     combinations = list(product(batch_sizes, learning_rates, hidden_layer_options, dropout_rates, model_types))
 
     for i, (batch_size, lr, hidden_layers, dropout, model_type) in enumerate(combinations):
-        print(f"\nRunning configuration {i+1}/{len(combinations)}")
-        print(f"Model: {model_type.upper()}, Batch Size: {batch_size}, LR: {lr}, Layers: {hidden_layers}, Dropout: {dropout}")
+        print(f"\nRunning configuration {i + 1}/{len(combinations)}")
+        print(
+            f"Model: {model_type.upper()}, Batch Size: {batch_size}, LR: {lr}, Layers: {hidden_layers}, Dropout: {dropout}")
 
         run_experiment(
             batch_size=batch_size,
@@ -106,7 +86,6 @@ def run_hyperparameter_search():
             patience=patience,
             model_type=model_type
         )
-
 
 
 run_hyperparameter_search()
