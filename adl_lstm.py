@@ -1,6 +1,6 @@
 from preprocessing import load_blockwise_sequences, load_labels_and_subjects, stratified_group_split, \
     oversample_minority_classes, print_class_distribution
-from helper import LSTMModel, train_model, test_model
+from helper import LSTMModel, CNN1DModel, train_model, test_model
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 from itertools import product

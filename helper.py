@@ -32,6 +32,38 @@ class LSTMModel(nn.Module):
         return self.ffn(x)
 
 
+class CNN1DModel(nn.Module):
+    def __init__(self, dropout_rate=0.5, input_length=151, input_channels=3):
+        super().__init__()
+        self.conv1 = nn.Conv1d(in_channels=input_channels, out_channels=64, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool1d(kernel_size=2)
+        self.conv2 = nn.Conv1d(in_channels=64, out_channels=64, kernel_size=3, padding=1)
+
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=dropout_rate)
+
+        # infer flatten size using a dummy input
+        with torch.no_grad():
+            dummy_input = torch.zeros(1, input_channels, input_length)  # (B, C, L)
+            x = self.relu(self.conv1(dummy_input))
+            x = self.pool(x)
+            x = self.relu(self.conv2(x))
+            flatten_dim = x.view(1, -1).shape[1]  # total features after flattening
+
+        self.fc1 = nn.Linear(flatten_dim, 500)
+        self.fc2 = nn.Linear(500, 9)
+
+    def forward(self, x):
+        x = x.permute(0, 2, 1)  # (B, 3, 151)
+        x = self.relu(self.conv1(x))
+        x = self.pool(x)
+        x = self.relu(self.conv2(x))
+        x = self.dropout(x)
+        x = x.view(x.size(0), -1)
+        x = self.dropout(self.relu(self.fc1(x)))
+        return self.fc2(x)
+
+
 
 def train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=10, patience=10):
     print("pushed 1:44ipup")
