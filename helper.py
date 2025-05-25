@@ -8,9 +8,9 @@ from sklearn.metrics import confusion_matrix
 
 
 class LSTMModel(nn.Module):
-    def __init__(self, hidden_layers=[250, 250, 50], dropout_rate=0.4, out_features=9):
+    def __init__(self, hidden_layers=None, dropout_rate=0.4, out_features=9):
         super().__init__()
-        self.lstm = nn.LSTM(input_size=3, hidden_size=hidden_layers[0], num_layers=2, batch_first=True)
+        self.lstm = nn.LSTM(input_size=3, hidden_size=hidden_layers[0], num_layers=1, batch_first=True)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=dropout_rate)
 
