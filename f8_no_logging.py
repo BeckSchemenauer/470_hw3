@@ -56,7 +56,7 @@ def run_experiment(
 
     # model and training setup
     if model_type == 'lstm':
-        model = LSTMModel(hidden_layers=hidden_layers, dropout_rate=dropout_rate)
+        model = LSTMModel(hidden_layers=hidden_layers, dropout_rate=dropout_rate, out_features=8)
     elif model_type == 'cnn':
         model = CNN1DModel(hidden_layers=hidden_layers, dropout_rate=dropout_rate)
     elif model_type == 'transformer':
@@ -64,7 +64,7 @@ def run_experiment(
     else:
         raise ValueError(f"Unsupported model_type: {model_type}")
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     criterion = torch.nn.CrossEntropyLoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -73,17 +73,17 @@ def run_experiment(
 
     # train and get final validation accuracy
     train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=epochs, patience=patience)
-    final_acc = test_model(model, val_loader, device, return_acc=True)
+    final_acc = test_model(model, val_loader, device)
     print(f"Final Validation Accuracy: {final_acc:.4f}")
 
 
 def run_hyperparameter_search():
     # define hyperparameter options
-    batch_sizes = [32, 64]
-    learning_rates = [.001, .0005, .00025, .0002, ]
+    batch_sizes = [64]
+    learning_rates = [.0004, .0002, ]
     hidden_layer_options = [[64]]
-    dropout_rates = [0.4, 0.5]
-    model_types = ['lstm']
+    dropout_rates = [0.7, 0.8]
+    model_types = ['cnn']
     epochs = 200
     patience = 15
 
