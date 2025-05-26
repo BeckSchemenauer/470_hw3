@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
-
 class LSTMModel(nn.Module):
     def __init__(self, hidden_layers=None, dropout_rate=0.4, out_features=9):
         super().__init__()
@@ -33,31 +32,34 @@ class LSTMModel(nn.Module):
 
 
 class CNN1DModel(nn.Module):
-    def __init__(self, hidden_layers=[500], dropout_rate=0.5, input_length=151, input_channels=3, out_features=9):
+    def __init__(self,
+                 conv_config,  # list of (out_channels, kernel_size) tuples for conv layers
+                 hidden_layers,  # list of hidden layer sizes for the fully connected classifier
+                 dropout_rate,  # dropout rate applied after each layer
+                 input_length,  # length of the input time series (using 151)
+                 input_channels,  # number of input channels (just using 3)
+                 out_features,  # number of output classes
+                 pool_every=2):  # insert a MaxPool1d layer after every N conv layers
         super().__init__()
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=dropout_rate)
 
-        # convolutional layers with deeper structure
-        self.conv_layers = nn.Sequential(
-            nn.Conv1d(input_channels, 64, kernel_size=3, padding=1),
-            self.relu,
-            nn.Conv1d(64, 64, kernel_size=3, padding=1),
-            self.relu,
-            nn.MaxPool1d(kernel_size=2),
+        conv_layers = []
+        in_channels = input_channels
 
-            nn.Conv1d(64, 128, kernel_size=3, padding=1),
-            self.relu,
-            nn.Conv1d(128, 128, kernel_size=3, padding=1),
-            self.relu,
-            nn.MaxPool1d(kernel_size=2),
+        for i, (out_channels, kernel_size) in enumerate(conv_config):
+            padding = kernel_size // 2  # 'same' padding
+            conv_layers.append(nn.Conv1d(in_channels, out_channels, kernel_size=kernel_size, padding=padding))
+            conv_layers.append(self.relu)
 
-            nn.Conv1d(128, 256, kernel_size=3, padding=1),
-            self.relu,
-            nn.Conv1d(256, 256, kernel_size=3, padding=1),
-            self.relu,
-            nn.MaxPool1d(kernel_size=2),
-        )
+            if (i + 1) % pool_every == 0:
+                conv_layers.append(nn.MaxPool1d(kernel_size=2))
+
+            in_channels = out_channels
+
+        self.conv_layers = nn.Sequential(*conv_layers)
+
+        print("____________________update_2___________________________")
 
         # calculate flattened dimension
         with torch.no_grad():
