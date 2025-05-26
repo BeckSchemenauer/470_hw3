@@ -70,7 +70,7 @@ def run_experiment(
 
     # train and get final validation accuracy
     train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=epochs, patience=patience)
-    final_acc = test_model(model, val_loader, device, return_acc=True)
+    final_acc = test_model(model, val_loader, device)
     print(f"Final Validation Accuracy: {final_acc:.4f}")
 
     # generate filename
