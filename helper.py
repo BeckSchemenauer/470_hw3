@@ -48,7 +48,7 @@ class CNN1DModel(nn.Module):
         in_channels = input_channels
 
         for i, (out_channels, kernel_size) in enumerate(conv_config):
-            padding = kernel_size // 2  # 'same' padding
+            padding = kernel_size // 2
             conv_layers.append(nn.Conv1d(in_channels, out_channels, kernel_size=kernel_size, padding=padding))
             conv_layers.append(self.relu)
 
@@ -59,7 +59,7 @@ class CNN1DModel(nn.Module):
 
         self.conv_layers = nn.Sequential(*conv_layers)
 
-        print("____________________update_2___________________________")
+        print("____________________update_3___________________________")
 
         # calculate flattened dimension
         with torch.no_grad():
