@@ -3,7 +3,7 @@ from helper import LSTMModel, train_model, test_model
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 
-X = load_blockwise_sequences("adl_data_split_blocks.csv")
+X = load_blockwise_sequences("data/adl_data_split_blocks.csv")
 print(X.shape)
 
 labels, subject_ids = load_labels_and_subjects("adl_labels.csv")

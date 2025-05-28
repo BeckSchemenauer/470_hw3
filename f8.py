@@ -25,7 +25,7 @@ def run_experiment(
     sys.stdout = buffer  # redirect prints
 
     # load and split data
-    X = load_blockwise_sequences("fall_data_split_blocks.csv")
+    X = load_blockwise_sequences("data/fall_data_split_blocks.csv")
     labels, subject_ids = load_labels_and_subjects("fall_labels.csv")
     X_train, X_test, y_train, y_test = stratified_group_split(X, labels, subject_ids)
 
