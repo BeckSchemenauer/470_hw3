@@ -15,7 +15,7 @@ def run_experiment(
         patience=20
 ):
     # load and split data
-    X = load_blockwise_sequences("data/adl_data_split_blocks.csv")
+    X = load_blockwise_sequences("../data/adl_data_split_blocks.csv")
     labels, subject_ids = load_labels_and_subjects("adl_labels.csv")
     X_train, X_test, y_train, y_test = stratified_group_split(X, labels, subject_ids)
 
